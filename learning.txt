@@ -1,0 +1,81 @@
+from transformers import GPT2LMHeadModel, GPT2Tokenizer
+
+// the transformer library was created by hugging face which provides pre-trained models for natural language processing 
+and GPT2LMHeadModel  is the actual neural network model that generates text based on a given input.
+GPT2Tokenizer : It converts human-readable text (e.g., "Hello, world!") into a format the model can process ,After the model generates text, the tokenizer also converts the tokens back into human-readable text.
+
+
+# Load pre-trained GPT-2 model
+model_name = "gpt2"  
+model = GPT2LMHeadModel.from_pretrained(model_name)
+tokenizer = GPT2Tokenizer.from_pretrained(model_name)
+
+//These are initial setup steps for using GPT-2 with the Hugging Face Transformers library.
+They ensure you have the necessary model and tokenizer ready to handle text input and output.
+
+def generate_text(prompt):
+    # Encode the prompt text into tokens
+    inputs = tokenizer.encode(prompt, return_tensors="pt")
+    
+// the function is used for taking a single arguments here its prompt and tokenizer is used to convert the text to machine readable and later to text  and finally ,return_tensors="pt" : This specifies that the output should be in PyTorch tensor format ("pt" stands for PyTorch).
+A tensor is a multidimensional array used in deep learning.
+The PyTorch tensor format is necessary because GPT-2 (loaded via Hugging Face) uses PyTorch for computations.
+
+
+    # Generate text based on the prompt
+    outputs = model.generate(
+        inputs,
+        max_length=3000,
+        num_return_sequences=1,
+        temperature=0.6 ,
+        top_k=50,
+        top_p=0.95,
+        repetition_penalty=1.2,
+        no_repeat_ngram_size=2,
+        do_sample=True,  
+        pad_token_id=tokenizer.eos_token_id  
+    )
+
+    // 1. max_length=3000:
+    This sets the maximum number of tokens (words, punctuation, etc.) the model can generate in the output.
+    2. num_return_sequences=1:
+    Specifies how many different outputs (sequences) the model should generate for the given prompt.
+    Example: If set to 3, the model will generate 3 different text responses.
+    3. temperature=0.6:
+    Controls the creativity or randomness of the generated text.
+    Lower values (e.g., 0.2) make the output more predictable and repetitive.
+    Higher values (e.g., 1.0) make it more diverse but can lead to nonsensical results.
+    4. top_k=50:
+    Limits the model to consider only the top 50 most probable words at each step of generation.
+    This helps the model stay focused and avoid less likely, irrelevant words.
+    5. top_p=0.95:
+    Ensures the output balances between diversity and coherence.
+    6. repetition_penalty=1.2:
+    Penalizes repeated words or phrases in the generated output.
+    Example: Without this, the model might generate repetitive sentences like "AI is great. AI is great. AI is great."
+    7. no_repeat_ngram_size=2:
+    Prevents the model from repeating phrases of a specified size
+    8. do_sample=True:
+    Enables sampling instead of using greedy decoding.
+    Greedy decoding always picks the word with the highest probability, leading to predictable and less diverse outputs.
+    Sampling allows randomness, which results in more varied and creative responses.
+    9. pad_token_id=tokenizer.eos_token_id:
+    Sets the padding token ID to the same as the end-of-sequence (EOS) token ID.
+    Padding ensures that all outputs have the same length (useful for batching), and using the EOS token avoids unexpected behavior.
+
+
+    # Decode the generated tokens back into text
+    return tokenizer.decode(outputs[0], skip_special_tokens=True)
+
+    1. outputs[0]
+    The outputs variable contains the generated token(s) from the model in the form of numerical IDs (tokens).
+    Since num_return_sequences=1, the model generates only one output, which is the first sequence (outputs[0]).
+    2. tokenizer.decode()
+    Converts the numerical tokens back into human-readable text.
+    The tokenizer's decode() function takes the generated sequence (list of token IDs) and maps it back to words, punctuation, and spaces.
+    3. skip_special_tokens=True
+    Special tokens like <|endoftext|> or <pad> are added by the model for specific purposes (e.g., marking the end of the generated text).
+
+# Test prompt
+prompt = "Explain the importance of AI in modern technology."
+print(generate_text(prompt))
